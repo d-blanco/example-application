@@ -1,0 +1,49 @@
+name: Release and Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set TAG_NAME
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: docker.io/${{ secrets.REGISTRY_USER }}/example-application:${{ env.TAG_NAME }}
+
+  trigger-deployment-update:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Set TAG_NAME again
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Trigger workflow in env repo
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: update-deployment.yaml
+          repo: YOUR_USERNAME/example-environment
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: main
+          inputs: |
+            {
+              "tag_name": "${{ env.TAG_NAME }}",
+              "image": "docker.io/${{ secrets.REGISTRY_USER }}/example-application"
+            }
