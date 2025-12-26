@@ -10,7 +10,7 @@ def index():
     return f'Hello Argo CD {version}!'
 
 @app.route('/api')
-def index():
+def api():
     return f'{api_key}'
 
 app.run(host='0.0.0.0', port=8080)
