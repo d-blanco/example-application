@@ -3,6 +3,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return 'Hello Argo CD v3.0!'
+    return 'Hello Argo CD (PNC BANK) v4.0.0!'
 
 app.run(host='0.0.0.0', port=8080)
